@@ -1,34 +1,38 @@
 export function parseEmbedToMarkdown(blocks) {
   const isVideo = blocks.service === "youtube" || blocks.service === "vimeo";
   if (isVideo) {
-    return `<video src="${blocks.embed}" align="center" width="80%" isUpload="true" />\n`;
+    return `<video align="center" src="${blocks.embed}" width="80%" isUpload="true" />`;
   }
-  const filename =
-    blocks.caption || blocks.source.substring(blocks.source.lastIndexOf("/") + 1);
-  return `<file name="${filename}" src="${blocks.source}" align="center" width="80%" isUpload="true" />\n`;
+  // For file embeds, use source if available, otherwise embed
+  const src = blocks.source || blocks.embed;
+  const filename = blocks.caption || src.substring(src.lastIndexOf("/") + 1);
+  return `<file name="${filename}" align="center" src="${src}" width="80%" isUpload="true" />`;
 }
 
 export function parseHeaderToMarkdown(blocks) {
   switch (blocks.level) {
     case 1:
-      return `# ${blocks.text}\n`;
+      return `# ${blocks.text}`;
     case 2:
-      return `## ${blocks.text}\n`;
+      return `## ${blocks.text}`;
     case 3:
-      return `### ${blocks.text}\n`;
+      return `### ${blocks.text}`;
     case 4:
-      return `#### ${blocks.text}\n`;
+      return `#### ${blocks.text}`;
     case 5:
-      return `##### ${blocks.text}\n`;
+      return `##### ${blocks.text}`;
     case 6:
-      return `###### ${blocks.text}\n`;
+      return `###### ${blocks.text}`;
     default:
-      break;
+      return `### ${blocks.text}`; // Default to h3 if level is invalid
   }
 }
 
 export function parseImageToMarkdown(blocks) {
-  return `![${blocks.caption}](${blocks.file.url} "${blocks.caption}")\n`;
+  const caption = blocks.caption || "";
+  const altText = caption || "Image";
+  const title = caption ? ` "${caption}"` : "";
+  return `![${altText}](${blocks.file.url}${title})`;
 }
 
 function parseListItems(items, style, level = 0, start = 1) {
@@ -47,17 +51,17 @@ function parseListItems(items, style, level = 0, start = 1) {
 
 export function parseListToMarkdown(blocks) {
   if (!blocks.items || blocks.items.length === 0) {
-    return "\n";
+    return "";
   }
   const start = blocks.meta?.start || 1;
-  return `${parseListItems(blocks.items, blocks.style, 0, start)}\n`;
+  return parseListItems(blocks.items, blocks.style, 0, start);
 }
 
 export function parseParagraphToMarkdown(blocks) {
   let processedText = blocks.text || "";
   // convert anchor tags to markdown links
   processedText = processedText.replace(/<a href="([^\"]+)">([^<]+)<\/a>/g, "[$2]($1)");
-  return `${processedText}\n`;
+  return processedText;
 }
 
 /**
@@ -78,8 +82,9 @@ export async function parseToMarkdown(blocks) {
       case "embed":
         return parseEmbedToMarkdown(item.data);
       default:
-        break;
+        return ""; // Return empty string for unknown block types
     }
-  });
-  return parsedData.join("\n");
+  }).filter(block => block !== ""); // Remove empty blocks
+  
+  return parsedData.join("\n\n"); // Double line breaks between blocks for PlateJS
 }

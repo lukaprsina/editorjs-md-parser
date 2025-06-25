@@ -1,6 +1,7 @@
 {
   "name": "editorjs-md-parser",
   "version": "0.0.3",
+  "type": "module",
   "description": "Import from markdown and export editorjs data to markdown",
   "author": {
     "name": "Paolo William Carrara"
