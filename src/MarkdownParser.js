@@ -1,5 +1,11 @@
 export function parseEmbedToMarkdown(blocks) {
-  return `${blocks.embed}\n`;
+  const isVideo = blocks.service === "youtube" || blocks.service === "vimeo";
+  if (isVideo) {
+    return `<video src="${blocks.embed}" align="center" width="80%" isUpload="true" />\n`;
+  }
+  const filename =
+    blocks.caption || blocks.source.substring(blocks.source.lastIndexOf("/") + 1);
+  return `<file name="${filename}" src="${blocks.source}" align="center" width="80%" isUpload="true" />\n`;
 }
 
 export function parseHeaderToMarkdown(blocks) {
@@ -22,29 +28,36 @@ export function parseHeaderToMarkdown(blocks) {
 }
 
 export function parseImageToMarkdown(blocks) {
-  return `![${blocks.caption}](${blocks.url} "${blocks.caption}")`.concat("\n");
+  return `![${blocks.caption}](${blocks.file.url} "${blocks.caption}")\n`;
+}
+
+function parseListItems(items, style, level = 0, start = 1) {
+  const indent = "  ".repeat(level);
+  return items
+    .map((item, index) => {
+      const marker = style === "ordered" ? `${start + index}.` : "-";
+      let listItem = `${indent}${marker} ${item.content}`;
+      if (item.items && item.items.length > 0) {
+        listItem += `\n${parseListItems(item.items, style, level + 1, 1)}`;
+      }
+      return listItem;
+    })
+    .join("\n");
 }
 
 export function parseListToMarkdown(blocks) {
-  let items = [];
-  switch (blocks.style) {
-    case "unordered":
-      items = blocks.items.map((item) => {
-        return `- ${item}`;
-      });
-      return "\n" + items.join("\n") + "\n";
-    case "ordered":
-      items = blocks.items.map((item, index) => {
-        return `${index + 1}. ${item}`;
-      });
-      return "\n" + items.join("\n") + "\n";
-    default:
-      break;
+  if (!blocks.items || blocks.items.length === 0) {
+    return "\n";
   }
+  const start = blocks.meta?.start || 1;
+  return `${parseListItems(blocks.items, blocks.style, 0, start)}\n`;
 }
 
 export function parseParagraphToMarkdown(blocks) {
-  return `${blocks.text}\n`;
+  let processedText = blocks.text || "";
+  // convert anchor tags to markdown links
+  processedText = processedText.replace(/<a href="([^\"]+)">([^<]+)<\/a>/g, "[$2]($1)");
+  return `${processedText}\n`;
 }
 
 /**
