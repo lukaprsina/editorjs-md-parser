@@ -1,8 +1,51 @@
-import { parseEmbedToMarkdown } from "./BlockTypeParsers/EmbedTypeParser";
-import { parseHeaderToMarkdown } from "./BlockTypeParsers/HeaderTypeParser";
-import { parseImageToMarkdown } from "./BlockTypeParsers/ImageTypeParser";
-import { parseListToMarkdown } from "./BlockTypeParsers/ListTypeParser";
-import { parseParagraphToMarkdown } from "./BlockTypeParsers/ParagraphTypeParser";
+export function parseEmbedToMarkdown(blocks) {
+  return `${blocks.embed}\n`;
+}
+
+export function parseHeaderToMarkdown(blocks) {
+  switch (blocks.level) {
+    case 1:
+      return `# ${blocks.text}\n`;
+    case 2:
+      return `## ${blocks.text}\n`;
+    case 3:
+      return `### ${blocks.text}\n`;
+    case 4:
+      return `#### ${blocks.text}\n`;
+    case 5:
+      return `##### ${blocks.text}\n`;
+    case 6:
+      return `###### ${blocks.text}\n`;
+    default:
+      break;
+  }
+}
+
+export function parseImageToMarkdown(blocks) {
+  return `![${blocks.caption}](${blocks.url} "${blocks.caption}")`.concat("\n");
+}
+
+export function parseListToMarkdown(blocks) {
+  let items = [];
+  switch (blocks.style) {
+    case "unordered":
+      items = blocks.items.map((item) => {
+        return `- ${item}`;
+      });
+      return "\n" + items.join("\n") + "\n";
+    case "ordered":
+      items = blocks.items.map((item, index) => {
+        return `${index + 1}. ${item}`;
+      });
+      return "\n" + items.join("\n") + "\n";
+    default:
+      break;
+  }
+}
+
+export function parseParagraphToMarkdown(blocks) {
+  return `${blocks.text}\n`;
+}
 
 /**
  * Parse editor data blocks to markdown syntax
