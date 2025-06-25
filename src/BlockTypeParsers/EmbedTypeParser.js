@@ -1,3 +1,3 @@
 export function parseEmbedToMarkdown(blocks) {
-  return `> ${blocks.embed}\n`;
+  return `${blocks.embed}\n`;
 }
