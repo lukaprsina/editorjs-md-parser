@@ -1,3 +1,58 @@
+import { unified } from "unified";
+import rehypeParse from "rehype-parse";
+import rehypeRemark from "rehype-remark";
+import remarkStringify from "remark-stringify";
+
+/**
+ * Process text content to convert HTML links to markdown using unified ecosystem
+ * This function handles HTML anchor tags anywhere in the text content
+ */
+function processTextWithLinks(text) {
+  if (!text || typeof text !== "string") {
+    return text || "";
+  }
+
+  // Check if text contains HTML anchor tags
+  if (!text.includes("<a ")) {
+    return text;
+  }
+
+  // try {
+  // Wrap the text fragment in a paragraph to make it valid HTML
+  const htmlContent = `<p>${text}</p>`;
+
+  // Use unified to process HTML to Markdown
+  const processor = unified()
+    .use(rehypeParse, { fragment: true })
+    .use(rehypeRemark)
+    .use(remarkStringify, {
+      bullet: "-",
+      emphasis: "_",
+      strong: "*",
+      rule: "-",
+      ruleRepetition: 3,
+      ruleSpaces: false,
+    });
+
+  const result = processor.processSync(htmlContent);
+  let processedText = String(result);
+
+  processedText = processedText.replaceAll("\u00A0", " ");
+
+  // Remove the wrapping paragraph tags that were added for processing
+  processedText = processedText.replace(/^<p>/, "").replace(/<\/p>\s*$/, "");
+
+  // Clean up any remaining newlines from processing
+  processedText = processedText.replace(/\n+/g, " ").trim();
+
+  return processedText;
+  /* } catch (error) {
+    console.warn('Failed to process HTML links with unified:', error);
+    // Fallback to regex-based processing if unified fails
+    return text.replace(/<a href="([^"]+)">([^<]+)<\/a>/g, '[$2]($1)');
+  } */
+}
+
 export function parseEmbedToMarkdown(blocks) {
   const isVideo = blocks.service === "youtube" || blocks.service === "vimeo";
   if (isVideo) {
@@ -5,33 +60,38 @@ export function parseEmbedToMarkdown(blocks) {
   }
   // For file embeds, use source if available, otherwise embed
   const src = blocks.source || blocks.embed;
-  const filename = blocks.caption || src.substring(src.lastIndexOf("/") + 1);
+  const filename =
+    processTextWithLinks(blocks.caption) ||
+    src.substring(src.lastIndexOf("/") + 1);
   return `<file name="${filename}" align="center" src="${src}" width="80%" isUpload="true" />`;
 }
 
 export function parseHeaderToMarkdown(blocks) {
+  const processedText = processTextWithLinks(blocks.text);
   switch (blocks.level) {
     case 1:
-      return `# ${blocks.text}`;
+      return `# ${processedText}`;
     case 2:
-      return `## ${blocks.text}`;
+      return `## ${processedText}`;
     case 3:
-      return `### ${blocks.text}`;
+      return `### ${processedText}`;
     case 4:
-      return `#### ${blocks.text}`;
+      return `#### ${processedText}`;
     case 5:
-      return `##### ${blocks.text}`;
+      return `##### ${processedText}`;
     case 6:
-      return `###### ${blocks.text}`;
+      return `###### ${processedText}`;
     default:
       throw new Error(`Invalid header level: ${blocks.level}`);
-      // return `### ${blocks.text}`; // Default to h3 if level is invalid
+    // return `### ${processedText}`; // Default to h3 if level is invalid
   }
 }
 
 export function parseImageToMarkdown(blocks) {
-  const caption = blocks.caption || "";
-  return `![${caption}](${blocks.file.url})`;
+  const caption = processTextWithLinks(blocks.caption) || "";
+  const altText = caption || "Image";
+  const title = caption ? ` "${caption}"` : "";
+  return `![${altText}](${blocks.file.url}${title})`;
 }
 
 function parseListItems(items, style, level = 0, start = 1) {
@@ -45,9 +105,9 @@ function parseListItems(items, style, level = 0, start = 1) {
       let nestedItems = null;
 
       if (typeof item === "string") {
-        content = item;
+        content = processTextWithLinks(item);
       } else if (typeof item === "object" && item !== null) {
-        content = item.content || "";
+        content = processTextWithLinks(item.content) || "";
         nestedItems = item.items;
       } else {
         content = "";
@@ -73,10 +133,7 @@ export function parseListToMarkdown(blocks) {
 }
 
 export function parseParagraphToMarkdown(blocks) {
-  let processedText = blocks.text || "";
-  // convert anchor tags to markdown links
-  processedText = processedText.replace(/<a href="([^\"]+)">([^<]+)<\/a>/g, "[$2]($1)");
-  return processedText;
+  return processTextWithLinks(blocks.text || "");
 }
 
 /**
