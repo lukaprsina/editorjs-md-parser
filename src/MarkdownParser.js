@@ -39,10 +39,26 @@ function parseListItems(items, style, level = 0, start = 1) {
   return items
     .map((item, index) => {
       const marker = style === "ordered" ? `${start + index}.` : "-";
-      let listItem = `${indent}${marker} ${item.content}`;
-      if (item.items && item.items.length > 0) {
-        listItem += `\n${parseListItems(item.items, style, level + 1, 1)}`;
+
+      // Handle both string items and object items
+      let content;
+      let nestedItems = null;
+
+      if (typeof item === "string") {
+        content = item;
+      } else if (typeof item === "object" && item !== null) {
+        content = item.content || "";
+        nestedItems = item.items;
+      } else {
+        content = "";
       }
+
+      let listItem = `${indent}${marker} ${content}`;
+
+      if (nestedItems && nestedItems.length > 0) {
+        listItem += `\n${parseListItems(nestedItems, style, level + 1, 1)}`;
+      }
+
       return listItem;
     })
     .join("\n");

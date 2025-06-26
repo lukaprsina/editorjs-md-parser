@@ -54,6 +54,13 @@ const testBlocks = [
   {
     type: "list",
     data: {
+      style: "unordered",
+      items: ["Simple string item 1", "Simple string item 2", "Simple string item 3"],
+    },
+  },
+  {
+    type: "list",
+    data: {
       style: "ordered",
       meta: {
         start: 2,
@@ -115,6 +122,9 @@ async function testParser() {
       /^- Apples/m,
       /^  - Red/m,
       /^- Oranges/m,
+      /^- Simple string item 1/m,
+      /^- Simple string item 2/m,
+      /^- Simple string item 3/m,
       /^2\. Second item/m,
       /^3\. Third item/m,
       /<video align="center" src="https:\/\/www\.youtube\.com\/embed\/dQw4w9WgXcQ" width="80%" isUpload="true" \/>/,
