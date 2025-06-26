@@ -24,15 +24,14 @@ export function parseHeaderToMarkdown(blocks) {
     case 6:
       return `###### ${blocks.text}`;
     default:
-      return `### ${blocks.text}`; // Default to h3 if level is invalid
+      throw new Error(`Invalid header level: ${blocks.level}`);
+      // return `### ${blocks.text}`; // Default to h3 if level is invalid
   }
 }
 
 export function parseImageToMarkdown(blocks) {
   const caption = blocks.caption || "";
-  const altText = caption || "Image";
-  const title = caption ? ` "${caption}"` : "";
-  return `![${altText}](${blocks.file.url}${title})`;
+  return `![${caption}](${blocks.file.url})`;
 }
 
 function parseListItems(items, style, level = 0, start = 1) {
