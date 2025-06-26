@@ -20,7 +20,13 @@ This parser has been modified to be compatible with PlateJS markdown format requ
    - Files use `<file>` MDX component with proper PlateJS attributes
    - Improved filename extraction from URLs
 
-5. **List Parsing**: Removed unnecessary trailing newlines while preserving nested structure.
+5. **List Parsing**:
+
+   - Fixed to handle both EditorJS list formats:
+     - Simple string arrays: `["item1", "item2", "item3"]`
+     - Nested object format: `[{content: "item1", items: [...]}]`
+   - Proper nested structure support
+   - Removed unnecessary trailing newlines
 
 6. **Paragraph Parsing**: Cleaned up HTML anchor tag to markdown link conversion.
 
@@ -42,6 +48,13 @@ This parser has been modified to be compatible with PlateJS markdown format requ
 ### Test Results:
 
 All parsing functions have been tested and validated to produce PlateJS-compatible markdown output.
+
+- `test-parser.js`: Comprehensive test suite covering all block types and both list formats
+- `test-real-data.js`: Test with real EditorJS data from Slovenian caving blog
+- `examples/00_in.json`: Real EditorJS data sample
+- `examples/00_out_corrected.mdx`: Correctly parsed output (compare with `00_out.mdx` to see the fix)
+
+All tests pass successfully, ensuring robust parsing of diverse EditorJS content.
 
 ## Usage:
 
