@@ -28,9 +28,14 @@
   "typings": "src/index",
   "dependencies": {
     "css-loader": "^5.0.0",
+    "hast-util-to-mdast": "^10.1.2",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
     "remark": "^13.0.0",
     "remark-parse": "^9.0.0",
+    "remark-stringify": "^11.0.0",
     "require": "^2.4.20",
-    "style-loader": "^2.0.0"
+    "style-loader": "^2.0.0",
+    "unified": "^11.0.5"
   }
 }
